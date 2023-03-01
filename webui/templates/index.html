@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Tweet Generator</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+      <style>
+        .tweet {
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          padding: 10px;
+          margin-bottom: 10px;
+          margin-top: 20px;
+        }
+    
+        .tweet .username {
+          font-weight: bold;
+          color: #1da1f2;
+        }
+    
+        .tweet .date {
+          color: #555;
+          margin-left: 10px;
+        }
+    
+        .tweet .text {
+          margin-top: 10px;
+        }
+      </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-dark bg-primary">
+      <a class="navbar-brand" href="#">Tweet Generator</a>
+    </nav>
+    <div class="container my-3">
+      <form method="POST">
+        <div class="form-group">
+          <label for="text">Text:</label>
+          <textarea class="form-control" id="text" name="text">{% if prompt_text is not none %}{{ prompt_text }}{% endif %}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="dropdown">Sentiment:</label>
+          <select class="form-control" id="dropdown" name="dropdown">
+            <option value="funny" {% if sentiment == 'funny' %}selected{% endif %}>Funny</option>
+            <option value="cool" {% if sentiment == 'cool' %}selected{% endif %}>Cool</option>
+            <option value="serious" {% if sentiment == 'serious' %}selected{% endif %}>Serious</option>
+            <option value="sad" {% if sentiment == 'sad' %}selected{% endif %}>Sad</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+      {% if response_status == 200 and tweet is not none %}
+      <div class="tweet">
+        <div class="username">John Doe</div>
+        <div class="date">Just now</div>
+        <div class="text">{{ tweet }}</div>
+      </div>
+      {% endif %}
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+      crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+      integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+      crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+      integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+      crossorigin="anonymous"></script>
+  </body>
+</html>
