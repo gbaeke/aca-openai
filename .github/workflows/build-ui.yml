@@ -61,4 +61,4 @@ jobs:
           azcliversion: 2.30.0
           inlineScript: |
             az config set extension.use_dynamic_install=yes_without_prompt
-            az containerapp update -n $PREFIX-ui -g $RG --image $ACR/openaiui:${{ github.sha }}
+            az containerapp update -n $PREFIX-webui -g $RG --image $ACR/openaiui:${{ github.sha }}
