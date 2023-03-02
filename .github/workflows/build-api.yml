@@ -36,7 +36,9 @@ jobs:
       with:
         context: ./openai
         push: true
-        tags: ${{ env.ACR }}/openaiapi:${{ github.sha }}
+        tags: | 
+          ${{ env.ACR }}/openaiapi:${{ github.sha }}
+          ${{ env.ACR }}/openaiapi:latest
 
   deploy:
     needs: build-and-push

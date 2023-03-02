@@ -1,7 +1,23 @@
+from asyncore import read
 import openai
 from flask import Flask, request, jsonify
 import os, requests
 import logging
+from azure.identity import ManagedIdentityCredential
+from azure.keyvault.secrets import SecretClient
+
+def read_secret_from_keyvault(vault_url, secret_name, managed_identity_client_id):
+    # Create a ManagedIdentityCredential using the client ID of the user-assigned managed identity
+    credential = ManagedIdentityCredential(client_id=managed_identity_client_id)
+
+    # Create a SecretClient using the Key Vault URL and ManagedIdentityCredential
+    secret_client = SecretClient(vault_url=vault_url, credential=credential)
+
+    # Use the SecretClient to get the specified secret by name
+    secret = secret_client.get_secret(secret_name)
+
+    # Return the value of the secret as a string
+    return secret.value
 
 # set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -24,15 +40,30 @@ if type == 'Azure' and 'AZURE_API_KEY' not in os.environ:
     logging.error('Please set the AZURE_API_KEY environment variable')
     exit(1)
 
+# check for Azure Key Vault URL in environment and exit if it doesn't exist
+if 'AZURE_KEY_VAULT_URL' not in os.environ:
+    logging.error('Please set the AZURE_KEY_VAULT_URL environment variable')
+    exit(1)
+
+# check for managed identity client ID in environment and exit if it doesn't exist
+if 'MANAGED_IDENTITY_CLIENT_ID' not in os.environ:
+    logging.error('Please set the MANAGED_IDENTITY_CLIENT_ID environment variable')
+    exit(1)
+
+# Set Azure Key Vault URL from environment
+vault_url = os.environ['AZURE_KEY_VAULT_URL']
+
+# Set managed identity client ID from environment
+managed_identity_client_id = os.environ['MANAGED_IDENTITY_CLIENT_ID']
 
 # Set OpenAI API key from environment
 if type == 'OpenAI':
-    openai.api_key = os.environ['OPENAI_API_KEY']
+    openai.api_key = read_secret_from_keyvault(vault_url, "openai-api-key", managed_identity_client_id)
     logging.info("Using OpenAI")
 
 # Set Azure API key from environment
 if type == 'Azure':
-    azure_api_key = os.environ['AZURE_API_KEY']
+    azure_api_key = read_secret_from_keyvault(vault_url, "azure-api-key", managed_identity_client_id)
     logging.info("Using Azure")
 
 
@@ -113,6 +144,12 @@ def generate_azure(text, sentiment):
 
     # Return generated tweet as JSON response
     return tweet
+
+
+
+
+
+
 
 # Run Flask app
 if __name__ == '__main__':

@@ -1,7 +1,10 @@
 param parPrefix string
 param parLocation string
 @secure()
-param parAzureApiKey string
+param parAzureApiKey string = ''
+
+@secure()
+param parOpenAiApiKey string = ''
 
 // azure container registry
 resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
@@ -15,11 +18,56 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
   }
 }
 
+
+// deploy key vault
+resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
+  name: '${parPrefix}-kv'
+  location: parLocation
+  properties: {    
+    sku: {
+      name: 'standard'
+      family: 'A'
+    }
+    tenantId: subscription().tenantId
+    enableRbacAuthorization: true
+  }
+
+  // add secrets
+  resource azureApiKey 'secrets' = if(parAzureApiKey != '') {
+    name: 'azure-api-key'
+    properties: {
+      value: parAzureApiKey
+    }
+  }
+
+  resource openaiApiKey 'secrets' = if(parOpenAiApiKey != '') {
+    name: 'openai-api-key'
+    properties: {
+      value: parOpenAiApiKey
+    }
+  }
+
+}
+
+
 // create user assigned identity
 resource acaId 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = {
   name: '${parPrefix}-id'
   location: parLocation
 }
+
+// assign secrets reader role to identity
+// see https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide?tabs=azure-cli
+resource kvReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(keyVault.id, 'Key Vault Secrets User')
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
+    principalId: acaId.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 
 // assign acr pull role to identity
 resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
@@ -107,7 +155,7 @@ resource webui 'Microsoft.App/containerApps@2022-06-01-preview' = {
     template: {
       containers: [
         {
-          image: 'gbaeke/openaiui:1.0.0'
+          image: '${acr.properties.loginServer}/openaiui:latest'
           name: 'webui'
           env: [
             {
@@ -165,7 +213,7 @@ resource api 'Microsoft.App/containerApps@2022-06-01-preview' = {
     template: {
       containers: [
         {
-          image: 'gbaeke/openaiapi:1.0.0'
+          image: '${acr.properties.loginServer}/openaiapi:latest'
           name: 'api'
           env: [
             {
