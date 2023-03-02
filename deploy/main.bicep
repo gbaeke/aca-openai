@@ -203,12 +203,7 @@ resource api 'Microsoft.App/containerApps@2022-06-01-preview' = {
           identity: acaId.id
         }
       ]
-      secrets: [
-        {
-          name: 'apikey'
-          value: parAzureApiKey
-        }
-      ]
+
     }
     template: {
       containers: [
@@ -221,8 +216,12 @@ resource api 'Microsoft.App/containerApps@2022-06-01-preview' = {
               value: 'Azure'
             }
             {
-              name: 'AZURE_API_KEY'
-              secretRef: 'apikey'
+              name: 'AZURE_KEY_VAULT_URL'
+              value: keyVault.properties.vaultUri
+            }
+            {
+              name: 'MANAGED_IDENTITY_CLIENT_ID'
+              value: acaId.properties.clientId
             }
           ]
         }

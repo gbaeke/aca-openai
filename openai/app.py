@@ -30,16 +30,6 @@ if 'TYPE' not in os.environ:
 # Set type from environment: type should be OpenAI or Azure
 type = os.environ['TYPE']
 
-# check for OpenAI API key in environment and exit if it doesn't exist
-if type == 'OpenAI' and 'OPENAI_API_KEY' not in os.environ:
-    logging.error('Please set the OPENAI_API_KEY environment variable')
-    exit(1)
-
-# check for Azure API key in environment and exit if it doesn't exist
-if type == 'Azure' and 'AZURE_API_KEY' not in os.environ:
-    logging.error('Please set the AZURE_API_KEY environment variable')
-    exit(1)
-
 # check for Azure Key Vault URL in environment and exit if it doesn't exist
 if 'AZURE_KEY_VAULT_URL' not in os.environ:
     logging.error('Please set the AZURE_KEY_VAULT_URL environment variable')
