@@ -11,7 +11,6 @@ on:
 env:
   PREFIX: ai
   RG: rg-aca-openai
-  ACR: aiacrebhdfm6qwft7y.azurecr.io
 
 permissions:
   id-token: write # This is required for requesting the JWT
@@ -36,7 +35,7 @@ jobs:
       with:
         context: ./openai
         push: true
-        tags: $ACR/openaiui:${{ github.sha }}
+        tags: aiacrebhdfm6qwft7y.azurecr.io/openaiui:${{ github.sha }}
 
   deploy:
     needs: build-and-push
@@ -58,4 +57,4 @@ jobs:
           azcliversion: 2.30.0
           inlineScript: |
             az config set extension.use_dynamic_install=yes_without_prompt
-            az containerapp update -n $PREFIX-api -g $RG --image $ACR/openaiui:${{ github.sha }}
+            az containerapp update -n $PREFIX-api -g $RG --image aiacrebhdfm6qwft7y.azurecr.io/openaiui:${{ github.sha }}
