@@ -3,6 +3,35 @@ param parLocation string
 @secure()
 param parAzureApiKey string
 
+// azure container registry
+resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
+  name: '${parPrefix}acr${uniqueString(resourceGroup().id)}'
+  location: parLocation
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    adminUserEnabled: true
+  }
+}
+
+// create user assigned identity
+resource acaId 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = {
+  name: '${parPrefix}-id'
+  location: parLocation
+}
+
+// assign acr pull role to identity
+resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(acr.id, acaId.id, 'AcrPull')
+  scope: acr
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
+    principalId: acaId.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 // log analytics workspace
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: '${parPrefix}-la'
@@ -48,6 +77,12 @@ resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' = {
 resource webui 'Microsoft.App/containerApps@2022-06-01-preview' = {
   name: '${parPrefix}-webui'
   location: parLocation
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${acaId.id}': {}
+    }
+  }
   properties: {
     managedEnvironmentId: acaEnv.id
     configuration: {
@@ -62,6 +97,12 @@ resource webui 'Microsoft.App/containerApps@2022-06-01-preview' = {
         targetPort: 5000
 
       }
+      registries: [
+        {
+          server: acr.properties.loginServer
+          identity: acaId.id
+        }
+      ]
     }
     template: {
       containers: [
@@ -90,6 +131,12 @@ resource webui 'Microsoft.App/containerApps@2022-06-01-preview' = {
 resource api 'Microsoft.App/containerApps@2022-06-01-preview' = {
   name: '${parPrefix}-api'
   location: parLocation
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${acaId.id}': {}
+    }
+  }
   properties: {
     managedEnvironmentId: acaEnv.id
     configuration: {
@@ -102,6 +149,12 @@ resource api 'Microsoft.App/containerApps@2022-06-01-preview' = {
         external: false
         targetPort: 5001
       }
+      registries: [
+        {
+          server: acr.properties.loginServer
+          identity: acaId.id
+        }
+      ]
       secrets: [
         {
           name: 'apikey'
