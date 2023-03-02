@@ -36,7 +36,10 @@ jobs:
       with:
         context: ./webui
         push: true
-        tags: ${{ env.ACR }}/openaiui:${{ github.sha }}
+        tags: | 
+          ${{ env.ACR }}/openaiui:${{ github.sha }}
+          ${{ env.ACR }}/openaiui:latest
+          
 
   deploy:
     needs: build-and-push
