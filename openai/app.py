@@ -50,6 +50,7 @@ managed_identity_client_id = os.environ['MANAGED_IDENTITY_CLIENT_ID']
 if type == 'OpenAI':
     openai.api_key = read_secret_from_keyvault(vault_url, "openai-api-key", managed_identity_client_id)
     logging.info("Using OpenAI")
+    model = os.getenv("API", "completion") # other option is chat
 
 # Set Azure API key from environment
 if type == 'Azure':
@@ -85,18 +86,32 @@ def generate_openai(text, sentiment):
     # Define OpenAI prompt
     prompt = f"Write a tweet about {text} and make it {sentiment}"
 
-    # Call OpenAI completion API
-    response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=prompt,
-        max_tokens=50,
-        n=1,
-        stop=None,
-        temperature=0.8
-    )
+    tweet = None
 
-    # Extract generated tweet from OpenAI response
-    tweet = response.choices[0].text.strip()
+    if model == "completion":
+        # Call OpenAI completion API
+        response = openai.Completion.create(
+            engine="text-davinci-003",
+            prompt=prompt,
+            max_tokens=50,
+            n=1,
+            stop=None,
+            temperature=0.8
+        )
+
+        # Extract generated tweet from OpenAI response
+        tweet = response.choices[0].text.strip()
+    elif model == "chat":
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "Write a tweet about Kubernetes and make it funny"}
+            ],
+            temperature=0.8
+        )   
+
+        tweet = response.choices[0]['message']['content']
 
     # Return generated tweet as JSON response
     return tweet
