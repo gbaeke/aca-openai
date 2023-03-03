@@ -6,6 +6,7 @@ param parAzureApiKey string = ''
 @secure()
 param parOpenAiApiKey string = ''
 
+
 // azure container registry
 resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
   name: '${parPrefix}acr${uniqueString(resourceGroup().id)}'
