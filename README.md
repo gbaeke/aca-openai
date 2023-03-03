@@ -82,7 +82,7 @@ az deployment group create -g $RG -f ./deploy/main.bicep \
     --parameters parOpenAiApiKey=$OPENAI_KEY
 ```
 
-Note the the API can use either the OpenAI API or the Azure OpenAI API. In the deployment of the API, the `TYPE` environment variable can be set to `Azure` to use Azure OpenAI. In that case you need the Azure OpenAI API key. The other key can be left empty. If you set `TYPE` to `OpenAI`, you need the OpenAI API key.
+Note that the API can use either the OpenAI API or the Azure OpenAI API. In the deployment of the API, the `TYPE` environment variable can be set to `Azure` to use Azure OpenAI. In that case you need the Azure OpenAI API key. The other key can be left empty. If you set `TYPE` to `OpenAI`, you need the OpenAI API key.
 
 Now that the infrastructure is deployed, check the name of the `Azure Container Registry` that was deployed. It will be something like `aiacr<random-string>`. You will need this name in the next step.
 
@@ -102,6 +102,37 @@ env:
 Now run both workflows from the GitHub Actions tab in your forked repo. They can be run manually because they use the `workflow_dispatch` trigger. The workflows will build the container images and push them to the ACR. After that, `az containerapp update` is used to update the container images in the container apps.
 
 If you want, you can also update `main.bicep` to use the ACR that was deployed.
+
+## Setup the GitHub Secrets
+
+Setup the following secrets in your forked repo:
+- ACR_USERNAME: the short name of the ACR
+- ACR_PASSWORD: the password of the ACR
+- AZURE_SUBSCRIPTION_ID: the subscription ID of the subscription where the infrastructure was deployed
+- AZURE_TENANT_ID: the Azure tenant ID
+- AZURE_CLIENT_ID: the Azure client ID of the app registration used for OIDC authentication
+
+To setup GitHub for OIDC authentication to Azure, follow the instructions here: https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal
+
+To retrieve the subscription ID and tenant ID, run the following commands:
+
+```bash
+az account show --query id --output tsv
+az account show --query tenantId --output tsv
+```
+
+To get the name of your ACR in your resource group, run the following command:
+
+```bash
+az acr list --resource-group <resource-group-name> --query "[].name" --output tsv
+```
+
+To get the ACR password, run the following command:
+
+```bash
+az acr credential show --name <acr-name> --query passwords[0].value --output tsv
+```
+
 
 ## Test the app
 
