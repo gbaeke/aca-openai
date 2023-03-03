@@ -4,6 +4,8 @@
 
 This demo shows how to deploy a simple web app that uses the [OpenAI API](https://platform.openai.com/) to generate tweets based on a given prompt. The app is built using [Flask](https://flask.palletsprojects.com/en/1.1.x/) and [Bootstrap](https://getbootstrap.com/).
 
+Because this is mainly an Azure Container Apps demo, the app is not very sophisticated. The call to the OpenAI model could have been implemented in the Flask UI app. For demonstration purposes, a separate Container App is used to call the OpenAI API. The UI app calls the API app with the help of Dapr. Find more information about Dapr here: [https://dapr.io/](https://dapr.io/).
+
 ## Prerequisites
 
 - Azure subscription
@@ -98,6 +100,8 @@ env:
 ```
 
 Now run both workflows from the GitHub Actions tab in your forked repo. They can be run manually because they use the `workflow_dispatch` trigger. The workflows will build the container images and push them to the ACR. After that, `az containerapp update` is used to update the container images in the container apps.
+
+If you want, you can also update `main.bicep` to use the ACR that was deployed.
 
 ## Test the app
 
