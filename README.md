@@ -43,14 +43,14 @@ In `./openai/main.py`, find the following lines:
 
 ```python
 try:
-        response = requests.post(
-            "https://oa-geba.openai.azure.com/openai/deployments/tweeter/completions?api-version=2022-12-01",
-            json=payload,
-            headers={
-                "api-key": azure_api_key,
-                "Content-Type": "application/json"   
-            })
-        response = response.json()
+    response = requests.post(
+        "https://oa-geba.openai.azure.com/openai/deployments/tweeter/completions?api-version=2022-12-01",
+        json=payload,
+        headers={
+            "api-key": azure_api_key,
+            "Content-Type": "application/json"   
+        })
+    response = response.json()
 ```
 
 Replace `oa-geba.openai.azure.com` with the endpoint URL of your Azure OpenAI resource.
