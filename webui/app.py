@@ -14,6 +14,14 @@ if 'INVOKE_URL' not in os.environ:
 # set INVOKE_URL from environment
 invoke_url = os.environ['INVOKE_URL']
 
+# Retrieve USE_FD from environment and exit if not set
+if 'FD_ID' not in os.environ:
+    logging.error('Please set the USE_FD environment variable')
+    exit(1)
+
+# set FD_ID from environment
+fd_id = os.environ['FD_ID']
+
 
 
 app = Flask(__name__)
@@ -25,12 +33,16 @@ def index():
     text_field = None
     sentiment = None
 
-    # check front door id
-    frontdoor_id = request.headers.get('X-Azure-FDID')
-    if frontdoor_id:
-        logging.info(f"FrontDoor ID: {frontdoor_id}")
-    else:
-        return render_template('fd.html')
+    # check front door id if enabled
+    if fd_id == 'True':
+        frontdoor_id = request.headers.get('X-Azure-FDID')
+        if frontdoor_id:
+            logging.info(f"FrontDoor ID: {frontdoor_id}")
+        else:
+            return render_template('fd.html')
+    else:    
+        logging.info("FrontDoor ID check disabled")
+
 
     if request.method == 'POST':
         text_field = request.form['text']
