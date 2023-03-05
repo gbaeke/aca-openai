@@ -210,6 +210,24 @@ resource api 'Microsoft.App/containerApps@2022-06-01-preview' = {
       containers: [
         {
           image: '${acr.properties.loginServer}/openaiapi:latest'
+          probes: [
+            {
+              type: 'Liveness'
+              httpGet: {
+                port: 5001
+                path: '/probe'
+              }
+              initialDelaySeconds: 30
+              periodSeconds: 15
+            }
+            {
+              type: 'Readiness'
+              httpGet: {
+                port: 5001
+                path: '/probe'
+              }
+            }
+          ]
           name: 'api'
           env: [
             {
@@ -231,6 +249,7 @@ resource api 'Microsoft.App/containerApps@2022-06-01-preview' = {
         minReplicas: 1
         maxReplicas: 1
       }
+
       
     }
 

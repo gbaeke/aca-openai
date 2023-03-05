@@ -64,7 +64,7 @@ app = Flask(__name__)
 # Add probe route
 @app.route('/probe', methods=['GET'])
 def probe():
-    return "OK"
+    return jsonify({'status': 'OK'})
 
 # Define API route
 @app.route('/generate', methods=['POST'])
