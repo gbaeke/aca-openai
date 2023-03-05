@@ -26,6 +26,14 @@ def index():
     sentiment = None
 
     if request.method == 'POST':
+        # check front door id
+        frontdoor_id = request.headers.get('X-Azure-FDID')
+        if frontdoor_id:
+            logging.info(f"FrontDoor ID: {frontdoor_id}")
+        else:
+            return render_template('fd.html')
+
+        # continue with request if FD is used
         text_field = request.form['text']
         sentiment = request.form['dropdown']
         payload = {'text': text_field, 'sentiment': sentiment}
