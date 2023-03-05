@@ -1,3 +1,6 @@
 .dapr
 dapr.yaml
 *.azcli
+api-keys.md
+*.sh
+*.pfx

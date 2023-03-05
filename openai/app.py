@@ -61,6 +61,11 @@ if type == 'Azure':
 # Set up Flask app to run on port 5001
 app = Flask(__name__)
 
+# Add probe route
+@app.route('/probe', methods=['GET'])
+def probe():
+    return "OK"
+
 # Define API route
 @app.route('/generate', methods=['POST'])
 def generate():
