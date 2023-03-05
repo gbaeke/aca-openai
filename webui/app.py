@@ -14,13 +14,8 @@ if 'INVOKE_URL' not in os.environ:
 # set INVOKE_URL from environment
 invoke_url = os.environ['INVOKE_URL']
 
-# Retrieve USE_FD from environment and exit if not set
-if 'FD_ID' not in os.environ:
-    logging.error('Please set the USE_FD environment variable')
-    exit(1)
-
-# set FD_ID from environment
-fd_id = os.environ['FD_ID']
+# set FD_ID from environment if it exists
+fd_id = os.getenv('FD_ID', None)
 
 
 
@@ -34,7 +29,7 @@ def index():
     sentiment = None
 
     # check front door id if enabled
-    if fd_id == 'True':
+    if fd_id:
         frontdoor_id = request.headers.get('X-Azure-FDID')
         if frontdoor_id:
             logging.info(f"FrontDoor ID: {frontdoor_id}")
