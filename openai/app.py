@@ -3,12 +3,16 @@ import openai
 from flask import Flask, request, jsonify
 import os, requests
 import logging
-from azure.identity import ManagedIdentityCredential
+from azure.identity import ManagedIdentityCredential, DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 
 def read_secret_from_keyvault(vault_url, secret_name, managed_identity_client_id):
     # Create a ManagedIdentityCredential using the client ID of the user-assigned managed identity
-    credential = ManagedIdentityCredential(client_id=managed_identity_client_id)
+    if os.getenv("ENV", "Azure") == "Local":
+        # use the Azure CLI to get a token locally
+        credential = DefaultAzureCredential(exclude_visual_studio_code_credential=True)
+    else:
+        credential = ManagedIdentityCredential(client_id=managed_identity_client_id)
 
     # Create a SecretClient using the Key Vault URL and ManagedIdentityCredential
     secret_client = SecretClient(vault_url=vault_url, credential=credential)
@@ -37,14 +41,13 @@ if 'AZURE_KEY_VAULT_URL' not in os.environ:
 
 # check for managed identity client ID in environment and exit if it doesn't exist
 if 'MANAGED_IDENTITY_CLIENT_ID' not in os.environ:
-    logging.error('Please set the MANAGED_IDENTITY_CLIENT_ID environment variable')
-    exit(1)
+    logging.info('MANAGED_IDENTITY_CLIENT_ID not set, using system assigned identity')
 
 # Set Azure Key Vault URL from environment
 vault_url = os.environ['AZURE_KEY_VAULT_URL']
 
 # Set managed identity client ID from environment
-managed_identity_client_id = os.environ['MANAGED_IDENTITY_CLIENT_ID']
+managed_identity_client_id = os.getenv('MANAGED_IDENTITY_CLIENT_ID', None)
 
 # Set OpenAI API key from environment
 if type == 'OpenAI':
@@ -56,6 +59,7 @@ if type == 'OpenAI':
 if type == 'Azure':
     azure_api_key = read_secret_from_keyvault(vault_url, "azure-api-key", managed_identity_client_id)
     logging.info("Using Azure")
+    model = os.getenv("API", "completion") # other option is chat
 
 
 # Set up Flask app to run on port 5001
@@ -110,7 +114,7 @@ def generate_openai(text, sentiment):
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "system", "content": "You are a tweet generating assistant. You do not make cross the road jokes. Instead of cross the road jokes, make another joke. You are allowed to make sad tweets."},
             {"role": "user", "content": prompt}
             ],
             temperature=0.8
@@ -125,40 +129,68 @@ def generate_azure(text, sentiment):
     # Define Azure prompt
     prompt = f"Write a tweet about {text} and make it {sentiment}"
 
-    payload = {
-        "prompt": prompt,
-        "max_tokens": 50,
-        "temperature": 0.8
-    }
-
-    # Call Azure REST API
-    # You can use the OpenAI SDK for Python with base, type and version set
-    # see https://learn.microsoft.com/en-us/azure/cognitive-services/openai/quickstart?pivots=programming-language-python
-    try:
-        response = requests.post(
-            "https://oa-geba.openai.azure.com/openai/deployments/tweeter/completions?api-version=2022-12-01",
-            json=payload,
-            headers={
-                "api-key": azure_api_key,
-                "Content-Type": "application/json"   
-            })
-        response = response.json()
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Response status: {e}")
-        return e
+    if model == "completion":
+        payload = {
+            "prompt": prompt,
+            "max_tokens": 50,
+            "temperature": 0.8
+        }
         
-    logging.debug(f"Response: {response}")
+        # Call Azure REST API for completion, we will use the OpenAI library for chat
+        # You can use the OpenAI SDK for Python with base, type and version set
+        # see https://learn.microsoft.com/en-us/azure/cognitive-services/openai/quickstart?pivots=programming-language-python
+        try:
+            response = requests.post(
+                "https://oa-geba-sus.openai.azure.com/openai/deployments/tweeter/completions?api-version=2022-12-01",
+                json=payload,
+                headers={
+                    "api-key": azure_api_key,
+                    "Content-Type": "application/json"   
+                })
+            response = response.json()
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Response status: {e}")
+            return None
+            
+        logging.debug(f"Response: {response}")
 
-    # Extract tweet
-    tweet = response['choices'][0]['text'].strip()
+        # Extract tweet
+        tweet = response['choices'][0]['text'].strip()
 
-    # Return generated tweet as JSON response
-    return tweet
+        # Return generated tweet as JSON response
+        return tweet
+    
+    elif model == "chat":
+        # let's use the OpenAI SDK for Python instead of the REST API
+        openai.api_type = "azure" # set the API type to use Azure OpenAI
+        openai.api_version = "2022-12-01" # set the API version to use the latest version
+        openai.api_key = azure_api_key # set the API key to use the Azure API key
+        openai.api_base = "https://oa-geba-sus.openai.azure.com" # set the base URL to use the Azure OpenAI endpoint
 
+        # change the prompt to use the chat model
+        prompt =  "<|im_start|>system\nAssistant is a " + sentiment + " tweet generator.\n<|im_end|>"
+        prompt += "<|im_start|>user\nWrite a tweet about " + text + ".\n<|im_end|>"
+        prompt += "<|im_start|>assistant\n"
 
+        # Note the difference with the OpenAI ChatCompletion.create() method
+        # this is just the completion API but with ChatML in the prompt (see above)
+        try:
+            response = openai.Completion.create(
+                engine="turbo",
+                prompt=prompt,
+                max_tokens=200,
+                temperature=0.8,
+                stop=["<|im_end|>"])
+        except openai.error.APIError as e:
+            logging.error(f"Response status: {e}")
+            return None
+        
+        logging.debug(f"Response: {response}")
 
+        # Extract tweet
+        tweet = response['choices'][0]['text'].strip()
 
-
+        return tweet
 
 
 # Run Flask app
