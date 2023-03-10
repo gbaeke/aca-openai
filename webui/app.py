@@ -49,8 +49,8 @@ def index():
             # retrieve tweet from response
             tweet = response.json()['tweet']
             logging.info(f"Response status: {response_status}")
-        except requests.exceptions.RequestException as e:
-            response_status = e
+        except Exception as e:
+            response_status = 500
             logging.error(f"Response status: {response_status}")
     return render_template('index.html', response_status=response_status, tweet=tweet, prompt_text=text_field, sentiment=sentiment)
 

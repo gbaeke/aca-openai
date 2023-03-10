@@ -56,6 +56,12 @@
         <div class="text">{{ tweet }}</div>
       </div>
       {% endif %}
+      {% if response_status == 500 %}
+      <P></P>
+      <div class="alert alert-danger" role="alert">
+        There was an error generating your tweet. Please try again.
+      </div>
+      {% endif %}
     </div>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
       integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
