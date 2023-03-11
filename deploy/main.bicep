@@ -256,3 +256,59 @@ resource api 'Microsoft.App/containerApps@2022-06-01-preview' = {
   }
 }
 
+// deploy bot as a container app
+resource bot 'Microsoft.App/containerApps@2022-06-01-preview' = {
+  name: '${parPrefix}-bot'
+  location: parLocation
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${acaId.id}': {}
+    }
+  }
+  properties: {
+    managedEnvironmentId: acaEnv.id
+    configuration: {
+      activeRevisionsMode: 'Single'
+      dapr: {
+        enabled: false
+      }
+      ingress: {
+        external: true
+        targetPort: 5000
+      }
+      secrets: [
+        {
+          name: 'openaikey'
+          value: parOpenAiApiKey
+        }
+      ]
+      registries: [
+        {
+          server: acr.properties.loginServer
+          identity: acaId.id
+        }
+      ]
+    }
+    template: {
+      containers: [
+        {
+          image: '${acr.properties.loginServer}/openaibot:latest'
+          name: 'bot'
+          env: [
+            {
+              name: 'OPENAI_KEY'
+              secretRef: 'openaikey'
+            }
+          ]
+        }
+      ]
+      scale: {
+        minReplicas: 1
+        maxReplicas: 1
+      }
+
+    }
+
+  }
+}

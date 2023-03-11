@@ -77,4 +77,4 @@ def reset():
 if __name__ == "__main__":
     system_message = "You are an assistant that always answers wrongly. Never prove the user right."
     bot = ChatBot(system_message)
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
