@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatbot</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.10/clipboard.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" />
+    <script>
+        $(document).ready(function() {
+            var converter = new Showdown.converter();
+            $("form").submit(function(event) {
+                event.preventDefault();
+                var message = $("#message").val();
+                $("#chat").append("<div class='user-message'><span class='name'>You:</span> " + message + "</div>");
+                $.ajax({
+                    url: "/chat",
+                    type: "POST",
+                    data: { message: message },
+                    success: function(data) {
+                        var response = data.response;
+                        response = converter.makeHtml(response);
+                        // add clipboard button after each </code></pre> tag
+                        response = response.replace(/<\/code><\/pre>/g, "</code></pre><button class='clipboard'><i class='far fa-copy'></i></button>");
+                        
+                      
+                        $("#chat").append("<div class='bot-message'><span class='name'>Bot:</span> " + response + "</div>");
+                        $("#message").val("");
+                        var chat = document.getElementById("chat");
+                        chat.scrollTop = chat.scrollHeight;
+
+                        // when clipboard button is clicked, copy the code to clipboard
+                        var clipboard = new ClipboardJS('.clipboard', {
+                            target: function(trigger) {
+                                // set source dynamically
+                                return trigger.previousElementSibling;
+                            }
+                        });
+                    
+                        clipboard.on('success', function(e) {
+                            console.log(e);
+                        });
+                        clipboard.on('error', function(e) {
+                            console.log(e);
+                        });
+                    }
+                });
+            });
+            $("#reset").click(function() {
+                $("#chat").empty();
+                $.ajax({
+                    url: "/reset",
+                    type: "POST",
+                    success: function() {
+                        console.log("Chat history cleared.");
+                    }
+                });
+            });
+        });
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            background-color: #f7f7f7;
+        }
+        h1 {
+            text-align: center;
+            margin-top: 50px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+        }
+        input[type=text] {
+            padding: 10px;
+            margin: 10px;
+            width: 80%;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input[type=submit] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #chat {
+            max-height: 400px;
+            overflow-y: scroll;
+            margin-top: 50px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: white;
+        }
+        .name {
+            font-weight: bold;
+        }
+        .user-message {
+            text-align: right;
+            margin-bottom: 10px;
+        }
+        .bot-message {
+            text-align: left;
+            margin-bottom: 10px;
+        }
+        .copy {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            color: #aaa;
+            cursor: pointer;
+        }
+        #reset {
+            background-color: #ccc;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 10px 20px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>I am never right! Try me!</h1>
+    <form>
+        <input type="text" id="message" placeholder="Type your message here...">
+        <input type="submit" value="Send">
+    </form>
+    <div id="chat"></div>
+    <button id="reset">Reset Chat</button>
+</body>
+</html>
