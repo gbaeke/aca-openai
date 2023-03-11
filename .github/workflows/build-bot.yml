@@ -1,4 +1,4 @@
-name: Build and Deploy UI
+name: Build and Deploy Bot
 
 on:
   workflow_dispatch:
