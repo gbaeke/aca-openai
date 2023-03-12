@@ -55,7 +55,7 @@ class ChatBot:
 
         if tokens > 4000:
             print("WARNING: Number of tokens exceeds 4000. Truncating messages.")
-            self.messages = self.messages[-2:]
+            self.messages = self.messages[2:]
 
 
 if __name__ == "__main__":
