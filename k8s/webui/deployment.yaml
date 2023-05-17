@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ui
+  template:
+    metadata:
+      labels:
+        app: ui
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "ui"
+    spec:
+      containers:
+      - name: ui
+        image: aiacrebhdfm6qwft7y.azurecr.io/openaiui:fa0dbdb2e70bbd231a999176d903fad1c9fe9d41
+        ports:
+        - containerPort: 8080
+        env:
+        - name: INVOKE_URL
+          value: "http://localhost:3500/v1.0/invoke/openai/method/generate"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi

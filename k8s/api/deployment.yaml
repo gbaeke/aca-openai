@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "openai"
+    spec:
+      serviceAccountName: sa-tweet  # ensure you followed the steps in the README.md to create the service account
+      containers:
+      - name: ui
+        image: aiacrebhdfm6qwft7y.azurecr.io/openaiapi:084b1217e588663248123b80340ed3bceffa7400
+        ports:
+        - containerPort: 5001
+        env:
+        - name: ENV
+          value: Azure
+        - name: TYPE
+          value: OpenAI
+        - name: AZURE_KEY_VAULT_URL
+          value: https://ai-kv.vault.azure.net/
+        - name: MANAGED_IDENTITY_CLIENT_ID
+          value: 94c21765-e09d-4125-95d6-e2c2d9193169   # should be corrected to correct client id         
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
