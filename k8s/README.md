@@ -61,7 +61,7 @@ LOCATION=westeurope
 IDENTITY=id-tweet
 
 # this will take a few minutes
-az aks update -g $RG -n $CLUSTER --enable-oidc-issuer
+az aks update -g $RG -n $CLUSTER --enable-oidc-issuer --enable-workload-identity
 
 export AKS_OIDC_ISSUER="$(az aks show -n $CLUSTER -g $RG --query "oidcIssuerProfile.issuerUrl" -otsv)"
 echo Issuer URL: $AKS_OIDC_ISSUER
@@ -113,7 +113,6 @@ Now deploy the API with Kustomize from the `./k8s/api` folder:
 ```bash
 kubectl apply -k .
 ```
-
 
 
 

@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: azcli-deployment
+  namespace: openai
+  labels:
+    app: azcli
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: azcli
+  template:
+    metadata:
+      labels:
+        app: azcli
+        azure.workload.identity/use: "true"
+    spec:
+      # needs to refer to service account used with federation
+      serviceAccountName: sa-tweet
+      containers:
+        - name: azcli
+          image: mcr.microsoft.com/azure-cli:latest
+          command:
+            - "/bin/bash"
+            - "-c"
+            - "sleep infinity"

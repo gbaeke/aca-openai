@@ -11,14 +11,16 @@ spec:
     metadata:
       labels:
         app: api
+        azure.workload.identity/use: "true"
       annotations:
         dapr.io/enabled: "true"
         dapr.io/app-id: "openai"
+        dapr.io/app-port: "5001"
     spec:
-      serviceAccount: sa-tweet  # ensure you followed the steps in the README.md to create the service account
+      serviceAccountName: sa-tweet  # ensure you followed the steps in the README.md to create the service account
       containers:
       - name: api
-        image: aiacrebhdfm6qwft7y.azurecr.io/openaiapi:d55910196e492c77d0c177ba2db10008b750e8a8
+        image: aiacrebhdfm6qwft7y.azurecr.io/openaiapi:c869a1b8ac2beca334df6d936bfc7191eb8bde0c
         ports:
         - containerPort: 5001
         env:
@@ -28,8 +30,6 @@ spec:
           value: OpenAI
         - name: AZURE_KEY_VAULT_URL
           value: https://ai-kv.vault.azure.net/
-        - name: MANAGED_IDENTITY_CLIENT_ID
-          value: 94c21765-e09d-4125-95d6-e2c2d9193169   # should be corrected to correct client id         
         resources:
           requests:
             cpu: 100m
