@@ -15,15 +15,15 @@ spec:
         dapr.io/enabled: "true"
         dapr.io/app-id: "openai"
     spec:
-      serviceAccountName: sa-tweet  # ensure you followed the steps in the README.md to create the service account
+      serviceAccount: sa-tweet  # ensure you followed the steps in the README.md to create the service account
       containers:
-      - name: ui
-        image: aiacrebhdfm6qwft7y.azurecr.io/openaiapi:084b1217e588663248123b80340ed3bceffa7400
+      - name: api
+        image: aiacrebhdfm6qwft7y.azurecr.io/openaiapi:d55910196e492c77d0c177ba2db10008b750e8a8
         ports:
         - containerPort: 5001
         env:
         - name: ENV
-          value: Azure
+          value: Local
         - name: TYPE
           value: OpenAI
         - name: AZURE_KEY_VAULT_URL
