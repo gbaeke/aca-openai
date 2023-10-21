@@ -11,7 +11,7 @@ on:
 env:
   PREFIX: ai
   RG: rg-aca-openai
-  ACR: aiacrebhdfm6qwft7y.azurecr.io
+  ACR: acrgebatest.azurecr.io
 
 permissions:
   id-token: write # This is required for requesting the JWT
